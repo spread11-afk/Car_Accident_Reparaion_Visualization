@@ -168,7 +168,7 @@ def fetch_data():
     explode = tuple(0.01 for _ in range(len(total_compensation)))
     ax.pie(total_compensation, explode=explode, autopct=None, startangle=90,colors=colors)
     ax.set_xlabel(None)
-    ax.set_ylabel('總賠償金額（對數變換）')
+    ax.set_ylabel('總賠償金額')
     ax.set_title(f'{area} 案件圓餅圖')
     ax.grid(True)
     fig.tight_layout()

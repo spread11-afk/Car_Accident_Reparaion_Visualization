@@ -1,8 +1,5 @@
 requests
 pandas
-gunicorn
-flask
-psycopg2-binary
 matplotlib
-ttkbootstrap
 seaborn
+ttkbootstrap
