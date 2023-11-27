@@ -7,19 +7,17 @@ from ttkbootstrap.constants import *
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import fontManager
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import seaborn as sns
 import pandas as pd
 import numpy as np
 import csv
 import subprocess
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.font_manager import FontProperties as font
+
 
 # 加入中文字型設定：Google-思源正黑體
-#fontManager.addfont('NotoSansTC-VariableFont_wght.ttf')
-#matplotlib.rc('font', family='Noto Sans TC')
-fontManager.addfont('wt071.ttf')
-matplotlib.rc('font', family='071')
+fontManager.addfont('NotoSansTC-VariableFont_wght.ttf')
+matplotlib.rc('font', family='Noto Sans TC')
 
 
 # 設定全域變數
@@ -35,22 +33,22 @@ canvas = None
 canvas_scatter = None
 canvas_barplot = None
 canvas_boxplot1 = None
+text_box = None
 
 # 創建圖表框
 
 
 def create_frames(root):
-    global fig, fig_scatter, fig_barplot, fig_boxplot1, ax, ax_scatter, ax_barplot, ax_boxplot1, canvas, canvas_scatter, canvas_barplot, canvas_boxplot1
+    global fig, fig_scatter, fig_barplot, fig_boxplot1, ax, ax_scatter, ax_barplot, ax_boxplot1, canvas, canvas_scatter, canvas_barplot, canvas_boxplot1, text_box
     frames = {}
     for i in range(2):  # 2 行
         for j in range(2):  # 2 列
             frame = tb.Frame(root, borderwidth=2,
                              relief="solid", width=300, height=100)
-            frame.grid(row=i, column=j, padx=3, pady=3)  # 添加间距
-            label = tb.Label(frame, text=f"圖 {i+1}-{j+1}")
+            frame.grid(row=i, column=j, padx=3, pady=3)  # 添加間距
+            label = tb.Label(frame, text=f"{i+1}-{j+1}")
             label.pack(padx=5, pady=5)
             frame.configure(style='Blue.TFrame')
-            frames[f"frame_{i+1}_{j+1}"] = frame
     # ------圓餅圖位置------
     frame_1_1 = root.grid_slaves(row=0, column=0)[0]
     fig, ax = plt.subplots(figsize=(4, 2))  # 創建一個空的畫布
@@ -67,13 +65,12 @@ def create_frames(root):
         fig_barplot, master=frame_1_2)
     canvas_barplot.draw()
     canvas_barplot.get_tk_widget().pack(padx=0, pady=18)
-    # ------XY散點圖位置------
+    # ------text_box位置------
     frame_2_1 = root.grid_slaves(row=1, column=0)[0]
-    fig_scatter, ax_scatter = plt.subplots(figsize=(4, 2))  # 創建一個空的畫布
-    canvas_scatter = FigureCanvasTkAgg(
-        fig_scatter, master=frame_2_1)
-    canvas_scatter.draw()
-    canvas_scatter.get_tk_widget().pack(padx=0, pady=18)
+    # ------插入敘述性統計資料------
+    text_box = tk.Text(frame_2_1, height=11, width=43,
+                       bd=0, font=(16))
+    text_box.pack()
     # ------盒鬚圖位置------
     frame_2_2 = root.grid_slaves(row=1, column=1)[0]
     fig_boxplot1, ax_boxplot1 = plt.subplots(figsize=(4, 2))  # 創建一個空的畫布
@@ -149,7 +146,7 @@ def fetch_data():
     # 將敘述性統計資料打包成字串
     textdata = f"第一四分位數(Q1): {Q1}\n第三四分位數(Q3): {Q3}\n中位數(IQR): {IQR}\n上邊界: {upper_bound}\n下邊界: {lower_bound}\n高於上邊界的數量: {count_above}\n低於下邊界的數量: {count_below}"
 
-    # 在 Text 组件中插入数据
+    # 在 Text 组件中插入數據
     text_box.delete("1.0", tk.END)
     text_box.insert(tk.END, textdata)
 
@@ -160,10 +157,10 @@ def fetch_data():
         listbox.insert(tk.END, value[:-11])
     ax.clear()
 
-    # 获取總賠償金額数据
+    # 獲取總賠償金額數據
     total_compensation = df1['總賠償金額']
 
-    # 获取年月数据作为 X 轴
+    # 以ID為X軸
     IDname = df1['ID']
     colors = ['#2cbdfe', '#2fb9fc', '#33b4fa', '#36b0f8',
               '#3aacf6', '#3da8f4', '#41a3f2', '#449ff0',
@@ -175,6 +172,8 @@ def fetch_data():
               '#8d46c7', '#9042c5', '#943dc3', '#9739c1',
               '#9b35bf', '#9e31bd', '#a22cbb', '#a528b9',
               '#a924b7', '#ac20b5', '#b01bb3', '#b317b1']
+
+    # ------插入圓餅圖------
     ax.set_xticks([])
     explode = tuple(0.01 for _ in range(len(total_compensation)))
     ax.pie(total_compensation, explode=explode,
@@ -186,6 +185,7 @@ def fetch_data():
     fig.tight_layout()
     canvas.draw()
 
+    # ------插入長條圖------
     canvas_barplot.get_tk_widget().pack()
     ax_barplot.clear()
     ax_barplot.bar(IDname, total_compensation, color=colors)
@@ -198,16 +198,8 @@ def fetch_data():
     fig_barplot.tight_layout()
     canvas_barplot.draw()
 
-    canvas_scatter.get_tk_widget().pack()
-    ax_scatter.clear()
-    ax_scatter.scatter(df1.index, np.log10(df1['總賠償金額']))
-    ax_scatter.set_xticks([])
-    ax_scatter.set_ylabel('總賠償金額')
-    ax_scatter.set_title(f'{area} 案件XY散佈圖')
-    ax_scatter.grid(True)
-    fig_scatter.tight_layout()
-    canvas_scatter.draw()
 
+    # ------插入盒鬚圖------
     ax_boxplot1.clear()
     sns.boxplot(y=np.log10(df1['總賠償金額']), ax=ax_boxplot1, color='#894ac9')
     ax_boxplot1.set_title(f'{area} 案件盒鬚圖')
@@ -285,19 +277,13 @@ listbox_frame.pack(fill='x', pady=5)
 scrollbar = tb.Scrollbar(listbox_frame)
 scrollbar.pack(side='right', fill='y')
 listbox = tk.Listbox(listbox_frame,
-                     height=9,
+                     height=18,
                      yscrollcommand=scrollbar.set)
-listbox.pack(fill='x')
+listbox.pack(fill='x', expand=True)
 scrollbar.config(command=listbox.yview)
-
 
 # ------綁定點擊事件------
 listbox.bind("<Double-Button-1>", on_double_click)
-
-# ------插入敘述性統計資料------
-text_box = tk.Text(left_frame, height=9, bd=0,
-                   highlightbackground=root.cget('bg'))
-text_box.pack(fill='x', anchor=tk.W)
 
 # ------創建右側邊框(顯示圖表)------
 right_frame = tb.Frame(root, padding=10, borderwidth=2,
