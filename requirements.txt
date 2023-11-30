@@ -5,3 +5,4 @@ seaborn
 ttkbootstrap
 gunicorn
 flask
+psycopg2
