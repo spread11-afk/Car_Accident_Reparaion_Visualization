@@ -236,7 +236,7 @@ def on_double_click(event):
 
 # ------創建視窗------
 root = tb.Window(size=(1280, 768), position=(
-    300, 140), resizable=(False, False), title='車禍判決賠償金額視覺化')
+    300, 200), resizable=(False, False), title='車禍判決賠償金額視覺化')
 
 # ------創建左側邊框(控制面板)------
 left_frame = tb.Frame(root,
